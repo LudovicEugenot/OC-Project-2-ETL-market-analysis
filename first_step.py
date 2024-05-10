@@ -30,7 +30,7 @@ def transform_book(book_soup, url):
     product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
     #product_description = "'" + product_description + "'"
     #product_description.replace(',', '","')
-    #product_description.replace('"', '""')
+    #product_description.replace('"', '\\"')
 
     #on book pages, the category is 3rd in the breadcrumb
     category = book_soup.find('ul', {'class': 'breadcrumb'}).find_all('li')[2].text.strip()
@@ -73,6 +73,10 @@ def transform_book(book_soup, url):
 
 # Load
 def load_book(book_data):
+    for index, data in enumerate(book_data):
+        if type(data) is str and '£' in data:
+            book_data[index] = book_data[index][1:]
+
     with open('first_step.csv', 'w', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(['product_page_url',
