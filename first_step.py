@@ -28,9 +28,6 @@ def transform_book(book_soup, url):
 
     #go to the description header and get next paragraph
     product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
-    #product_description = "'" + product_description + "'"
-    #product_description.replace(',', '","')
-    #product_description.replace('"', '\\"')
 
     #on book pages, the category is 3rd in the breadcrumb
     category = book_soup.find('ul', {'class': 'breadcrumb'}).find_all('li')[2].text.strip()
@@ -43,23 +40,25 @@ def transform_book(book_soup, url):
     rating = book_soup.find('p', {'class': 'star-rating'})['class'][-1]
     #would have used a match - case but I'm on 3.9
     if rating == 'Zero':
-        review_rating = 0
+        review_rating = '0'
     elif rating == 'One':
-        review_rating = 1
+        review_rating = '1'
     elif rating == 'Two':
-        review_rating = 2
+        review_rating = '2'
     elif rating == 'Three':
-        review_rating = 3
+        review_rating = '3'
     elif rating == 'Four':
-        review_rating = 4
+        review_rating = '4'
     elif rating == 'Five':
-        review_rating = 5
+        review_rating = '5'
     else:
         review_rating = 'ERROR'
 
     base_url = url.split('.com')
     #get first image src and build url
     image_url = book_soup.find('img')['src'].replace('../..', base_url[0]+'.com')
+
+    print('Scraping book: '+book_title)
     return [url,
         upc,
         book_title,
@@ -74,9 +73,18 @@ def transform_book(book_soup, url):
 # Load
 def load_book(book_data):
     for index, data in enumerate(book_data):
-        if type(data) is str and '£' in data:
+        if type(data) is str and ('£' or '€') in data:
             book_data[index] = book_data[index][1:]
 
+    with open('second_step.csv', 'a', encoding='utf-8', newline='') as csvfile:
+        csvwriter = writer(csvfile, delimiter=',')
+        csvwriter.writerow(book_data)
+def init_csv():
+    '''
+    Delete document from previous execution of code.
+    Start new one with header.
+    :return:
+    '''
     with open('first_step.csv', 'w', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(['product_page_url',
@@ -89,9 +97,9 @@ def load_book(book_data):
                             'category',
                             'review_rating',
                             'image_url'])# Write the header
-        csvwriter.writerow(book_data)
 
 def main():
+    init_csv()
     book_url = "https://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
 
     book_scraped = scrap_book(book_url)
