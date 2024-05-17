@@ -1,4 +1,4 @@
-from first_step import scrap_book, transform_book, load_book
+from first_step import scrap_book, transform_book, load_book, init_csv
 import requests
 from bs4 import BeautifulSoup
 from csv import writer
@@ -20,25 +20,6 @@ def get_all_book_urls(category_page_soup, page_url):
         links.append(link)
 
     return links
-
-def init_csv():
-    '''
-    Delete document from previous execution of code.
-    Start new one with header.
-    :return:
-    '''
-    with open('second_step.csv', 'w', encoding='utf-8', newline='') as csvfile:
-        csvwriter = writer(csvfile, delimiter=',')
-        csvwriter.writerow(['product_page_url',
-                            'universal_product_code (upc)',
-                            'title',
-                            'price_including_tax',
-                            'price_excluding_tax',
-                            'number_available',
-                            'product_description',
-                            'category',
-                            'review_rating',
-                            'image_url'])# Write the header
 
 def scrap_category(category_url):
     response = requests.get(category_url)
@@ -73,6 +54,6 @@ def scrap_page(page_url):
         load_book(data)
 
 if __name__  == '__main__':
-    init_csv()
+    init_csv('second_step')
     scrap_category('https://books.toscrape.com/catalogue/category/books/travel_2/index.html')
     scrap_category('https://books.toscrape.com/catalogue/category/books/mystery_3/index.html')

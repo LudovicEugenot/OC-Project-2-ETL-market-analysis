@@ -79,13 +79,13 @@ def load_book(book_data):
     with open('second_step.csv', 'a', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(book_data)
-def init_csv():
+def init_csv(document_title):
     '''
     Delete document from previous execution of code.
     Start new one with header.
     :return:
     '''
-    with open('first_step.csv', 'w', encoding='utf-8', newline='') as csvfile:
+    with open(f'{document_title}.csv', 'w', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(['product_page_url',
                             'universal_product_code (upc)',
@@ -99,7 +99,7 @@ def init_csv():
                             'image_url'])# Write the header
 
 def main():
-    init_csv()
+    init_csv('first_step')
     book_url = "https://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
 
     book_scraped = scrap_book(book_url)
