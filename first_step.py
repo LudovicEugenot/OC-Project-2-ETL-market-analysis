@@ -27,7 +27,10 @@ def transform_book(book_soup, url):
             number_available += char
 
     #go to the description header and get next paragraph
-    product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
+    try:
+        product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
+    except Exception:
+        product_description = ''
 
     #on book pages, the category is 3rd in the breadcrumb
     category = book_soup.find('ul', {'class': 'breadcrumb'}).find_all('li')[2].text.strip()
@@ -73,12 +76,13 @@ def transform_book(book_soup, url):
 # Load
 def load_book(book_data):
     for index, data in enumerate(book_data):
-        if type(data) is str and ('£' or '€') in data:
+        if type(data) is str and '£' in data:
             book_data[index] = book_data[index][1:]
 
     with open('second_step.csv', 'a', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(book_data)
+
 def init_csv(document_title):
     '''
     Delete document from previous execution of code.
@@ -99,8 +103,8 @@ def init_csv(document_title):
                             'image_url'])# Write the header
 
 def main():
-    init_csv('first_step')
     book_url = "https://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
+    init_csv('first_step')
 
     book_scraped = scrap_book(book_url)
     book_transformed = transform_book(book_scraped, book_url)
