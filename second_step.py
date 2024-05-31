@@ -60,8 +60,8 @@ def load_category(all_book_data, category_title):
     for data in all_book_data:
         img_data = requests.get(data[-1]).content
         filepath = f'data/img/{category_title}/{data[2]}.jpg'
-        filepath.replace(':', '_')
-        #re.sub(r'[<>:"/\|?*]','_', filepath)
+        filepath = filepath.replace(':', '_')
+        # re.sub(r'[<>:"/\\|?*]','_', filepath)
         print(filepath)
         with open(filepath, 'wb') as handler:
             handler.write(img_data)
