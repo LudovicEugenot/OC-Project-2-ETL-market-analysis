@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from csv import writer
+import os
 
 # Extract
 def scrap_book(book_url):
@@ -29,7 +30,7 @@ def transform_book(book_soup, url):
     #go to the description header and get next paragraph
     try:
         product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
-    except Exception:
+    except AttributeError:
         product_description = ''
 
     #on book pages, the category is 3rd in the breadcrumb
@@ -83,13 +84,19 @@ def load_book(book_data):
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(book_data)
 
-def init_csv(document_title):
+
+def init_csv(document_path, document_title):
     '''
     Delete document from previous execution of code.
     Start new one with header.
+    :param document_path:
+    :param document_title:
     :return:
     '''
-    with open(f'{document_title}.csv', 'w', encoding='utf-8', newline='') as csvfile:
+    if not os.path.exists(document_path):
+        os.mkdir(document_path)
+
+    with open(f'{document_path}/{document_title}.csv', 'w', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(['product_page_url',
                             'universal_product_code (upc)',
@@ -103,8 +110,8 @@ def init_csv(document_title):
                             'image_url'])# Write the header
 
 def main():
-    book_url = "https://books.toscrape.com/catalogue/its-only-the-himalayas_981/index.html"
-    init_csv('first_step')
+    book_url = "https://books.toscrape.com/catalogue/alice-in-wonderland-alices-adventures-in-wonderland-1_5/index.html"
+    init_csv('data', 'first_step')
 
     book_scraped = scrap_book(book_url)
     book_transformed = transform_book(book_scraped, book_url)

@@ -2,6 +2,9 @@ from first_step import scrap_book, transform_book, load_book, init_csv
 import requests
 from bs4 import BeautifulSoup
 from csv import writer
+import os
+import re
+
 
 def get_all_book_urls(category_page_soup, page_url):
     '''
@@ -21,12 +24,13 @@ def get_all_book_urls(category_page_soup, page_url):
 
     return links
 
+
 def scrap_category(category_url):
     response = requests.get(category_url)
     soup = BeautifulSoup(response.text,'html.parser')
     title = soup.find('h1').text
     print(f'\n--- Scraping category ' + title + ' ---')
-    init_csv(title)
+    init_csv('data/csv', title)
     # If category has multiple pages
     pager = soup.find('ul', {'class': 'pager'})
     if pager is None:
@@ -38,21 +42,36 @@ def scrap_category(category_url):
             page_url = category_url.replace('index', f'page-{i}')
             scrap_page(page_url, title)
 
+
 def load_category(all_book_data, category_title):
+    # try to correct the price extract
     for book_data in all_book_data:
         for index, data in enumerate(book_data):
             if type(data) is str and '£' in data:
                 book_data[index] = book_data[index][1:]
 
-    with open(f'{category_title}.csv', 'a', encoding='utf-8', newline='') as csvfile:
+    with open(f'data/csv/{category_title}.csv', 'a', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerows(all_book_data)
+
+    if not os.path.exists(f'data/img/{category_title}'):
+        os.mkdir(f'data/img/{category_title}')
+
+    for data in all_book_data:
+        img_data = requests.get(data[-1]).content
+        filepath = f'data/img/{category_title}/{data[2]}.jpg'
+        filepath.replace(':', '_')
+        #re.sub(r'[<>:"/\|?*]','_', filepath)
+        print(filepath)
+        with open(filepath, 'wb') as handler:
+            handler.write(img_data)
 
 
 def scrap_page(page_url, category_title):
     '''
     Returns a table of every book url in the input page.
     :param page_url:
+    :param category_title:
     :return: Table of all book urls
     '''
     response = requests.get(page_url)
@@ -67,6 +86,7 @@ def scrap_page(page_url, category_title):
     # load all book data to the "category_name".csv
     load_category(all_book_data, category_title)
 
+
 if __name__  == '__main__':
-    scrap_category('https://books.toscrape.com/catalogue/category/books/classics_6/index.html')
+    #scrap_category('https://books.toscrape.com/catalogue/category/books/classics_6/index.html')
     scrap_category('https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html')
