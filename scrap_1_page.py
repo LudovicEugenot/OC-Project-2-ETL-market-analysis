@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from csv import writer
 from os import path, mkdir
 
+
 # Extract
 def scrap_book(book_url):
     """
@@ -14,6 +15,7 @@ def scrap_book(book_url):
     soup = BeautifulSoup(response.text, "html.parser")
     return soup
 
+
 # Transform
 def transform_book(book_soup, url):
     book_title = book_soup.h1.text.strip()
@@ -24,27 +26,27 @@ def transform_book(book_soup, url):
     price_excluding_tax = rows[2].find('td').text
 
     number_available = ''
-    for char in rows[-2].find('td').text:  #test every char and append the digits from the string
+    for char in rows[-2].find('td').text:  # test every char and append the digits from the string
         if char.isdigit():
             number_available += char
 
-    #go to the description header and get next paragraph
+    # go to the description header and get next paragraph
     try:
         product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
     # for the books without descriptions, we let an empty space instead
     except AttributeError:
         product_description = ''
 
-    #on book pages, the category is 3rd in the breadcrumb
+    # on book pages, the category is 3rd in the breadcrumb
     category = book_soup.find('ul', {'class': 'breadcrumb'}).find_all('li')[2].text.strip()
 
-    #get the number of stars by their color in the page rating
-    #rating = book_soup.find('p', {'class': 'star-rating'}).find_all('i', {'style': 'color:#E6CE31'})
-    #review_rating = len(rating)
+    # get the number of stars by their color in the page rating
+    # rating = book_soup.find('p', {'class': 'star-rating'}).find_all('i', {'style': 'color:#E6CE31'})
+    # review_rating = len(rating)
 
-    #get the rating number from the class name
+    # get the rating number from the class name
     rating = book_soup.find('p', {'class': 'star-rating'})['class'][-1]
-    #would have used a match - case but I'm on 3.9
+    # would have used a match - case but I'm on 3.9
     if rating == 'Zero':
         review_rating = '0'
     elif rating == 'One':
@@ -61,20 +63,21 @@ def transform_book(book_soup, url):
         review_rating = 'ERROR'
 
     base_url = url.split('.com')
-    #get first image src and build url
-    image_url = book_soup.find('img')['src'].replace('../..', base_url[0]+'.com')
+    # get first image src and build url
+    image_url = book_soup.find('img')['src'].replace('../..', base_url[0] + '.com')
 
-    print('Scraping book: '+book_title)
+    print('Scraping book: ' + book_title)
     return [url,
-        upc,
-        book_title,
-        price_including_tax,
-        price_excluding_tax,
-        number_available,
-        product_description,
-        category,
-        review_rating,
-        image_url]
+            upc,
+            book_title,
+            price_including_tax,
+            price_excluding_tax,
+            number_available,
+            product_description,
+            category,
+            review_rating,
+            image_url]
+
 
 # Load
 def load_book(book_data):
@@ -106,23 +109,25 @@ def init_csv(document_path, document_title):
                             'product_description',
                             'category',
                             'review_rating',
-                            'image_url'])# Write the header
+                            'image_url'])  # Write the header
 
-def recursive_mkdir(path):
+
+def recursive_mkdir(relative_path):
     # mkdirs doesn't work on Pycharm so I'm coding my own mkdirs
     '''
     Recursively call mkdir to create the directories.
     Made with relative path (with '/') in mind.
-    :param path: relative path intended.
+    :param relative_path: relative path intended.
     :return:
     '''
     try:
-        mkdir(path)
+        mkdir(relative_path)
     except FileNotFoundError:
-        path_parts = str(path).split('/')
+        path_parts = str(relative_path).split('/')
         new_path = '/'.join(path_parts[0:-1])
         recursive_mkdir(new_path)
-        mkdir(path)
+        mkdir(relative_path)
+
 
 def main():
     book_url = "https://books.toscrape.com/catalogue/alice-in-wonderland-alices-adventures-in-wonderland-1_5/index.html"
@@ -132,5 +137,6 @@ def main():
     book_transformed = transform_book(book_scraped, book_url)
     load_book(book_transformed)
 
-if __name__  == '__main__':
+
+if __name__ == '__main__':
     main()

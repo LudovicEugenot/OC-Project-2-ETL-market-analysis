@@ -1,4 +1,7 @@
-import third_step
+"""
+main
+"""
+import scrap_3_website
 
 if __name__ == '__main__':
-    third_step.scrap_all()
+    scrap_3_website.scrap_all()

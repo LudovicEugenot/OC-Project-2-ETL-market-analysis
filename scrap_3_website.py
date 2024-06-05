@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from second_step import scrap_category
+from scrap_2_category import scrap_category
 
 
 def scrap_all():
