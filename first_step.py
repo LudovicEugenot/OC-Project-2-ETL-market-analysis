@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from csv import writer
-import os
+from os import path, mkdir
 
 # Extract
 def scrap_book(book_url):
@@ -10,6 +10,7 @@ def scrap_book(book_url):
     :return: Get soup back.
     """
     response = requests.get(book_url)
+    response.encoding = response.apparent_encoding
     soup = BeautifulSoup(response.text, "html.parser")
     return soup
 
@@ -30,6 +31,7 @@ def transform_book(book_soup, url):
     #go to the description header and get next paragraph
     try:
         product_description = book_soup.find('div', {"id": "product_description"}).findNext('p').text
+    # for the books without descriptions, we let an empty space instead
     except AttributeError:
         product_description = ''
 
@@ -76,10 +78,6 @@ def transform_book(book_soup, url):
 
 # Load
 def load_book(book_data):
-    for index, data in enumerate(book_data):
-        if type(data) is str and '£' in data:
-            book_data[index] = book_data[index][1:]
-
     with open('second_step.csv', 'a', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerow(book_data)
@@ -93,11 +91,12 @@ def init_csv(document_path, document_title):
     :param document_title:
     :return:
     '''
-    if not os.path.exists(document_path):
-        os.mkdir(document_path)
+    if not path.exists(document_path):
+        recursive_mkdir(document_path)
 
     with open(f'{document_path}/{document_title}.csv', 'w', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
+        csvwriter.writerow(['SEP=,'])
         csvwriter.writerow(['product_page_url',
                             'universal_product_code (upc)',
                             'title',
@@ -108,6 +107,22 @@ def init_csv(document_path, document_title):
                             'category',
                             'review_rating',
                             'image_url'])# Write the header
+
+def recursive_mkdir(path):
+    # mkdirs doesn't work on Pycharm so I'm coding my own mkdirs
+    '''
+    Recursively call mkdir to create the directories.
+    Made with relative path (with '/') in mind.
+    :param path: relative path intended.
+    :return:
+    '''
+    try:
+        mkdir(path)
+    except FileNotFoundError:
+        path_parts = str(path).split('/')
+        new_path = '/'.join(path_parts[0:-1])
+        recursive_mkdir(new_path)
+        mkdir(path)
 
 def main():
     book_url = "https://books.toscrape.com/catalogue/alice-in-wonderland-alices-adventures-in-wonderland-1_5/index.html"

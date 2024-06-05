@@ -1,9 +1,11 @@
-from first_step import scrap_book, transform_book, load_book, init_csv
+import os.path
+
+from first_step import scrap_book, transform_book, init_csv, recursive_mkdir
 import requests
 from bs4 import BeautifulSoup
 from csv import writer
-import os
-import re
+from os import path
+from re import sub
 
 
 def get_all_book_urls(category_page_soup, page_url):
@@ -26,6 +28,11 @@ def get_all_book_urls(category_page_soup, page_url):
 
 
 def scrap_category(category_url):
+    '''
+    Repeat the ETL process for the whole category.
+    :param category_url: URL in str.
+    :return: Nothing. Writes category csv and downloads all book covers.
+    '''
     response = requests.get(category_url)
     soup = BeautifulSoup(response.text,'html.parser')
     title = soup.find('h1').text
@@ -44,28 +51,32 @@ def scrap_category(category_url):
 
 
 def load_category(all_book_data, category_title):
-    # try to correct the price extract
-    for book_data in all_book_data:
-        for index, data in enumerate(book_data):
-            if type(data) is str and '£' in data:
-                book_data[index] = book_data[index][1:]
-
+    '''
+    Write csv for category.
+    Downloads all book cover images from category.
+    :param all_book_data:
+    :param category_title: Title as str.
+    :return: Does not return. Creates file.
+    '''
     with open(f'data/csv/{category_title}.csv', 'a', encoding='utf-8', newline='') as csvfile:
         csvwriter = writer(csvfile, delimiter=',')
         csvwriter.writerows(all_book_data)
 
-    if not os.path.exists(f'data/img/{category_title}'):
-        os.mkdir(f'data/img/{category_title}')
+    if not path.exists(f'data/img/{category_title}'):
+        recursive_mkdir(f'data/img/{category_title}')
 
-    for data in all_book_data:
-        img_data = requests.get(data[-1]).content
-        filepath = f'data/img/{category_title}/{data[2]}.jpg'
-        filepath = filepath.replace(':', '_')
-        # re.sub(r'[<>:"/\\|?*]','_', filepath)
-        print(filepath)
-        with open(filepath, 'wb') as handler:
-            handler.write(img_data)
-
+    # for data in all_book_data:
+    #     img_data = requests.get(data[-1]).content
+    #     # stops bad characters from getting in the way of a good filepath.
+    #     book_title = sub('[<>:/"\\|?*]', '_', data[2])
+    #     filepath = f'data/img/{category_title}/{book_title}.jpg'
+    #     if len(os.path.abspath(filepath)) > 256 :
+    #         abspath = os.path.abspath(filepath)
+    #         abspath = abspath[:248]+' etc.jpg'
+    #         split = abspath.split('data')
+    #         filepath = 'data' + '/'.join(split[1].split('\\'))
+    #     with open(filepath, 'wb') as handler:
+    #         handler.write(img_data)
 
 def scrap_page(page_url, category_title):
     '''
@@ -89,4 +100,4 @@ def scrap_page(page_url, category_title):
 
 if __name__  == '__main__':
     #scrap_category('https://books.toscrape.com/catalogue/category/books/classics_6/index.html')
-    scrap_category('https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html')
+    scrap_category('https://books.toscrape.com/catalogue/category/books/philosophy_7/index.html')
