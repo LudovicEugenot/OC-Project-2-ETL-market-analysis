@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 # Ignore the created csv files
+data/
 *.csv
 
 # C extensions
